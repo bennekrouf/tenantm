@@ -11,7 +11,7 @@ use tokio;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use messengerc::{connect_to_messenger_service, MessagingService};
-use generated::tenant_manager_server::{TenantManager, TenantManagerServer};
+// use generated::tenant_manager_server::{TenantManager, TenantManagerServer};
 use generated::{ListTenantsRequest, ListTenantsResponse};
 
 #[derive(Debug, Default)]
