@@ -1,16 +1,18 @@
-
+pub mod generated {
+    tonic::include_proto!("tenantm");
+}
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use tonic::{transport::Server, Request, Response, Status};
 use dotenvy::from_path;
-use tracing::{info, error};
+// use tracing::{info, error};
 use tokio;
-
-// Generated code from the .proto file
-pub mod generated {
-    tonic::include_proto!("tenantm");
-}
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use messengerc::{connect_to_messenger_service, MessagingService};
+use generated::tenant_manager_server::{TenantManager, TenantManagerServer};
+use generated::{ListTenantsRequest, ListTenantsResponse};
 
 #[derive(Debug, Default)]
 pub struct MyTenantManager;
@@ -19,8 +21,8 @@ pub struct MyTenantManager;
 impl generated::tenant_manager_server::TenantManager for MyTenantManager {
     async fn list_tenants(
         &self,
-        _request: Request<generated::ListTenantsRequest>,
-    ) -> Result<Response<generated::ListTenantsResponse>, Status> {
+        _request: Request<ListTenantsRequest>,
+    ) -> Result<Response<ListTenantsResponse>, Status> {
         // Load the environment variables from a custom file
         let custom_env_path = PathBuf::from("proto-definitions/.service");
         from_path(&custom_env_path).expect("Failed to load environment variables from custom path");
@@ -53,11 +55,24 @@ impl generated::tenant_manager_server::TenantManager for MyTenantManager {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load environment variables
     dotenvy::from_path(PathBuf::from("proto-definitions/.service")).expect("Failed to load environment variables from custom path");
-    
-    // Get the server address from environment variables
-    let addr = env::var("SERVER_ADDRESS").unwrap_or_else(|_| "127.0.0.1:50051".to_string());
-    let addr = addr.parse()?;
 
+     let ip = env::var("TENANTM_DOMAIN").expect("Missing 'domain' environment variable");
+    let port = env::var("TENANTM_PORT").expect("Missing 'port' environment variable");
+    let addr = format!("{}:{}", ip, port).parse()?;
+
+    let tag = env::var("TENANTM_TAG").expect("Missing 'tag' environment variable");
+
+    // Create and initialize the gRPC client for the messaging service
+    let messenger_client = connect_to_messenger_service().await
+        .ok_or("Failed to connect to messenger service")?;
+
+    let messaging_service = MessagingService::new(
+        Arc::new(Mutex::new(messenger_client)),
+        tag.clone(),
+    );
+
+    let mes = format!("Tenantm listening on {}", &addr);
+    let _ = messaging_service.publish_message(mes.to_string(), Some(vec![tag])).await;
     // Create the gRPC server
     let tenant_manager = MyTenantManager::default();
 
