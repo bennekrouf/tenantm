@@ -15,6 +15,39 @@ Before running the service or testing, ensure you have the following:
 - **Rust**: The Rust programming language and its tooling installed. 
 - **`grpcurl`**: A command-line tool for interacting with gRPC services.
 
+
+
+## gRPC API
+
+The `tenantm` service provides the following gRPC methods:
+
+### `ListTenants`
+
+**Request:**
+
+- `ListTenantsRequest`
+
+**Response:**
+
+- `ListTenantsResponse` with a list of tenant names.
+
+### `ListDatetimeFolders`
+
+**Request:**
+
+- `ListDatetimeFoldersRequest` with the tenant name.
+
+**Response:**
+
+- `ListDatetimeFoldersResponse` with a list of datetime-named folders under the specified tenant.
+
+## Example Usage
+
+To test the `ListDatetimeFolders` method using `grpcurl`, you can use the following command:
+
+```bash
+grpcurl -plaintext -proto proto-definitions/tenantm.proto localhost:50059 tenantm.TenantManager/ListDatetimeFolders -d '{"tenant": "my_tenant"}'
+
 ## Running the Service
 
 To run the `tenantm` service, follow these steps:
