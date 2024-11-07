@@ -47,6 +47,7 @@ To test the `ListDatetimeFolders` method using `grpcurl`, you can use the follow
 
 ```bash
 grpcurl -plaintext -proto proto-definitions/tenantm.proto localhost:50059 tenantm.TenantManager/ListDatetimeFolders -d '{"tenant": "my_tenant"}'
+```
 
 ## Running the Service
 
